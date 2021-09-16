@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Flight;
 use App\Http\Resources\FlightResource;
+use Illuminate\Support\Facades\Validator;
 use DB;
 
 class FlightController extends Controller
@@ -31,11 +32,20 @@ class FlightController extends Controller
     public function store(Request $request)
     {
         //Validation
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'departure_date' => 'required',
-            'arrival_date' => 'required'
+            'arrival_date' => 'required',
+            'departure_airport' => 'required',
+            'arrival_airport' => 'required',
+            'pilot_id' => 'required',
+            'plane_id' => 'required'
         ]);
-        return Flight::create($request->all());
+
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            return Flight::create($request->all());
+        }
     }
 
     /**
@@ -46,7 +56,7 @@ class FlightController extends Controller
      */
     public function show($id)
     {
-        return Flight::find($id);
+        return new FlightResource(Flight::findOrFail($id));
     }
 
     /**
@@ -58,9 +68,24 @@ class FlightController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $flight = Flight::find($id);
-        $flight->update($request->all());
-        return $flight;
+                //Validation
+        $validator = Validator::make($request->all(), [
+            'departure_date',
+            'arrival_date',
+            'departure_airport',
+            'arrival_airport',
+            'pilot_id',
+            'plane_id'
+        ]);
+
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            return Flight::create($request->all());
+            $flight = Flight::find($id);
+            $flight->update($request->all());
+            return $flight;
+        }
     }
 
     /**

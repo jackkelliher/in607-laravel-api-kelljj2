@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Staff;
 use App\Http\Resources\StaffResource;
+use Illuminate\Support\Facades\Validator;
 use DB;
 
 class StaffController extends Controller
@@ -31,13 +32,18 @@ class StaffController extends Controller
     public function store(Request $request)
     {
         //Validation
-        $request->validate([
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'required',
             'hire_date' => 'required',
             'job' => 'required',
-            'qualifications' => 'required'
+            'qualifications' => 'nullable'
         ]);
 
-        return Staff::update($request->all());
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            return Staff::create($request->all());
+        }
     }
 
     /**
@@ -48,7 +54,7 @@ class StaffController extends Controller
      */
     public function show($id)
     {
-        return Staff::find($id);
+        return new StaffResource(Staff::findOrFail($id));
     }
 
     /**
@@ -60,8 +66,19 @@ class StaffController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $staff = Staff::find($id);
-        $staff->update($request::all());
+        //Validation
+        $validator = Validator::make($request->all(), [
+            'hire_date' => 'required',
+            'job' => 'required',
+            'qualifications' => 'nullable'
+        ]);
+
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            $staff = Staff::find($id);
+            $staff->update($request::all());
+        }
     }
 
     /**

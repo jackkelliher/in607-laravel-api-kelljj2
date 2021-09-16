@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Plane;
 use App\Http\Resources\PlaneResource;
+use Illuminate\Support\Facades\Validator;
 use DB;
 
 class PlaneController extends Controller
@@ -31,13 +32,17 @@ class PlaneController extends Controller
     public function store(Request $request)
     {
         //Validation
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'model' => 'required',
             'speed' => 'required',
             'capacity' => 'required'
         ]);
 
-        return Plane::update($request->all());
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            return Plane::create($request->all());
+        }
     }
 
     /**
@@ -48,7 +53,7 @@ class PlaneController extends Controller
      */
     public function show($id)
     {
-        return Plane::find($id);
+        return new PlaneResource(Plane::findOrFail($id));
     }
 
     /**
@@ -60,9 +65,21 @@ class PlaneController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $plane = Plane::find($id);
-        $plane->update($request->all());
-        return $plane;
+        //Validation
+        $validator = Validator::make($request->all(), [
+            'model',
+            'speed',
+            'capacity'
+        ]);
+
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            $plane = Plane::find($id);
+            $plane->update($request->all());
+            return $plane;
+        }
+        
     }
 
     /**

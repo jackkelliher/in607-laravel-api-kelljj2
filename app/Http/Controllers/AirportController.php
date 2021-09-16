@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Airport;
 use App\Http\Resources\AirportResource;
 use DB;
@@ -31,12 +32,19 @@ class AirportController extends Controller
      */
     public function store(Request $request)
     {
-        //Validation
-        $request->validate([
+        //Validating
+        $validator = Validator::make($request->all(), [
             'location' => 'required'
         ]);
 
-        return Airport::create($request->all());
+        //Returning error string instead of an error message
+        if ($validator->fails()) {
+            //$error = $validator->messages()->get('*');
+            return $validator->messages()->get('*');
+        } else {
+            //Validator success
+            return Airport::create($request->all());
+        }
     }
 
     /**
@@ -47,7 +55,7 @@ class AirportController extends Controller
      */
     public function show($id)
     {
-        return Airport::find($id);
+        return new AirportResource(Airport::findOrFail($id));
     }
 
     /**
@@ -59,9 +67,18 @@ class AirportController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $airport = Airport::find($id);
-        $airport->update($request->all());
-        return $airport;
+        $validator = Validator::make($request->all(), [
+            'location' => 'required'
+        ]);
+
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            $airport = Airport::find($id);
+            $airport->update($request->all());
+            $airport->save();
+            return $airport;
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Customer;
 use App\Http\Resources\CustomerResource;
+use Illuminate\Support\Facades\Validator;
 
 class CustomerController extends Controller
 {
@@ -30,14 +31,19 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         //validation
-        $request->validate([
+        $validation = Validator::make($request->all(), [
             'first_name' => 'required',
             'last_name' => 'required',
             'phone' => 'required',
-            'email' => 'required'
+            'email' => 'nullable'
         ]);
 
-        return Customer::create($request->all());
+        //If validator fails, return the errors that caused it instead of throwing an error
+        if($validation->fails()) {
+            return $validation->messages()->get('*');
+        } else {
+            return Customer::create($request->all());
+        }
     }
 
     /**
@@ -48,7 +54,7 @@ class CustomerController extends Controller
      */
     public function show($id)
     {
-        return Customer::find($id);
+        return new CustomerResource(Customer::findOrFail($id));
     }
 
     /**
@@ -60,9 +66,22 @@ class CustomerController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $customer = Customer::find($id);
-        $customer->update($request->all());
-        return $customer;
+        //validation
+        $validator = Validator::make($request->all(), [
+            'first_name',
+            'last_name',
+            'phone',
+            'email'
+        ]);
+
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            $customer = Customer::find($id);
+            $customer->update($request->all());
+            $customer->save();
+            return $customer;
+        }
     }
 
     /**
