@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -13,27 +14,36 @@ class AuthController extends Controller
     //Registering users
     public function register(Request $request) {
         //Validating request data
-        $fields = $request->validate([
+
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|string|unique:users,email',
             'password' => 'required|string|confirmed'
         ]);
 
-        //Creating user if validated 
-        $user = User::create([
-            'name' => $fields['name'],
-            'email' => $fields['email'],
-            'password' => bcrypt($fields['password'])
-        ]);
+        //Checking if email already exsists in database
+        if(User::where('email', '=', $request->get('email'))->count() > 0){
+            return $validator->messages()->get('*');
+        }
 
-        //Response
-        $response = [
-            'user' => $user,
-            'message' => 'User created successfully',
-            'status' => 201 //Successful status
-        ];
+        if($validator->fails()) {
+            return $validator->messages()->get('*');
+        } else {
+            //Creating user if validated 
+            $user = User::create([
+                'name' => $request->get('name'),
+                'email' => $request->get('email'),
+                'password' => bcrypt($request->get('password'))
+            ]);
 
-        return response($response, 201);
+            //Response
+            $response = [
+                'message' => 'User created successfully',
+                'status' => 201 //Successful status
+            ];
+
+            return response($response, 201);
+        }
     }
 
     public function login(Request $request) {
