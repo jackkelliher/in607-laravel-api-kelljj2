@@ -15,10 +15,10 @@ class CreateFlightsTable extends Migration
     {
         Schema::create('flights', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('plane_id')->constrained('planes');
-            $table->foreignId('pilot_id')->constrained('staff');
-            $table->foreignId('departure_airport')->constrained('airports');
-            $table->foreignId('arrival_airport')->constrained('airports');
+            $table->foreignId('plane_id')->constrained('planes')->onDelete('cascade');
+            $table->foreignId('pilot_id')->constrained('staff')->onDelete('cascade');
+            $table->foreignId('departure_airport')->constrained('airports')->onDelete('cascade');
+            $table->foreignId('arrival_airport')->constrained('airports')->onDelete('cascade');
             $table->string('departure_date');
             $table->string('arrival_date');
             $table->timestamps();

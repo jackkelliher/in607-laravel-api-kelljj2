@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Customer;
 use App\Http\Resources\CustomerResource;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Response;
 
 class CustomerController extends Controller
 {
@@ -18,7 +19,7 @@ class CustomerController extends Controller
     public function index()
     {
         return CustomerResource::collection(Cache::remember('customers', 60 * 60 * 24, function() {
-            return Customer::all();
+            return Customer::paginate(15);
         }));
     }
 
@@ -40,10 +41,28 @@ class CustomerController extends Controller
 
         //If validator fails, return the errors that caused it instead of throwing an error
         if($validation->fails()) {
-            return $validation->messages()->get('*');
-        } else {
-            return Customer::create($request->all());
+            $errors = $validation->messages()->get('*');
+            $response = [
+                'message' => 'Validation failed',
+                'errors' => $errors,
+                'status' => 400
+            ];
+
+            return response($response, 400);
         }
+        
+        $customer = Customer::create($request->all());
+        $id = $customer->id;
+
+        $pretty_customer = new CustomerResource(Customer::find($id));
+
+        $response = [
+            'customer' => $pretty_customer,
+            'message' => 'Customer created successfully',
+            'status' => 201
+        ];
+
+        return response($response, 201);
     }
 
     /**
@@ -54,7 +73,27 @@ class CustomerController extends Controller
      */
     public function show($id)
     {
-        return new CustomerResource(Customer::findOrFail($id));
+        $raw_customer = Customer::find($id);
+
+        //Testing if customer exsists in database
+        if($raw_customer == null) {
+            $response = [
+                'message' => 'Customer not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        $customer = new CustomerResource(Customer::find($id));
+
+        $response = [
+            'customer' => $customer,
+            'message' => 'Customer found.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 
     /**
@@ -74,14 +113,41 @@ class CustomerController extends Controller
             'email'
         ]);
 
+        //If validation fails
         if($validator->fails()) {
-            return $validator->messages()->get('*');
-        } else {
-            $customer = Customer::find($id);
-            $customer->update($request->all());
-            $customer->save();
-            return $customer;
+            $errors = $validator->messages()->get('*');
+            $response = [
+                'message' => 'Validation failed.',
+                'errors' => $errors,
+                'status' => 400
+            ];
+
+            return response($response, 400);
         }
+        $raw_customer = Customer::find($id);
+
+        if($raw_customer == null) {
+            $response = [
+                'message' => 'Customer not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        $raw_customer->update($request->all());
+        $raw_customer->save();
+
+        //Using the resource to provide a better looking response
+        $customer = new CustomerResource(Customer::find($id));
+
+        $response = [
+            'customer' => $customer,
+            'message' => 'Customer found and updated.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 
     /**
@@ -92,6 +158,25 @@ class CustomerController extends Controller
      */
     public function destroy($id)
     {
-        return Customer::destroy($id);
+        $raw_customer = Customer::find($id);
+
+        //Testing if customer is present in database
+        if($raw_customer == null) {
+            $response = [
+                'message' => 'Customer not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        Customer::destroy($id);
+
+        $response = [
+            'message' => 'Customer found and deleted successfully.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 }

@@ -20,7 +20,7 @@ use App\Http\Controllers\AuthController;
 |
 */
 Route::post('/register', [AuthController::class, 'register']); //Route to register a user
-Route::post('/login', [AuthController::class, 'login']); //Route to log in a user
+Route::post('/login', [AuthController::class, 'login'])->name('login'); //Route to log in a user
 
 
 Route::group(['middleware' => ['auth:sanctum']], function() {

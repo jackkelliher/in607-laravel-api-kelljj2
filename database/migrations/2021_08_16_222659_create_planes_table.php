@@ -18,7 +18,7 @@ class CreatePlanesTable extends Migration
             $table->string('model');
             $table->string('speed');
             $table->string('capacity');
-            $table->foreignId('airport_id')->constrained('airports');
+            $table->foreignId('airport_id')->constrained('airports')->onDelete('cascade');
             $table->timestamps();
         });
     }
