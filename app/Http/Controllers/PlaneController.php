@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Plane;
 use App\Http\Resources\PlaneResource;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Response;
 use DB;
 
 class PlaneController extends Controller
@@ -18,7 +20,7 @@ class PlaneController extends Controller
     public function index()
     {
         return PlaneResource::collection(Cache::remember('planes', 60 * 60 * 24, function() {
-            return Plane::all();
+            return Plane::paginate(15);
         }));
     }
 
@@ -31,14 +33,37 @@ class PlaneController extends Controller
     public function store(Request $request)
     {
         //Validation
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'model' => 'required',
-            'speed' => 'required',
             'capacity' => 'required',
+            'speed' => 'required',
             'airport_id' => 'required'
         ]);
 
-        return Plane::update($request->all());
+        if($validator->fails()) {
+            $error = $validator->messages()->get('*');
+            $response = [
+                'message' => 'Validation failed',
+                'errors' => $error,
+                'status' => 400
+            ];
+
+            return response($response, 400);
+        }
+        
+
+        $plane = Plane::create($request->all());
+        $id = $plane->id;
+
+        $pretty_plane = new PlaneResource(Plane::find($id));
+
+        $response = [
+            'plane' => $pretty_plane,
+            'message' => 'Plane created successfully.',
+            'status' => 201
+        ];
+        
+        return response($response, 201);
     }
 
     /**
@@ -49,7 +74,27 @@ class PlaneController extends Controller
      */
     public function show($id)
     {
-        return Plane::find($id);
+        $raw_plane = Plane::find($id);
+
+        //Testing if plane exsists in database
+        if($raw_plane == null) {
+            $response = [
+                'message' => 'Plane not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        $plane = new PlaneResource(Plane::find($id));
+
+        $response = [
+            'plane' => $plane,
+            'message' => 'Plane found.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 
     /**
@@ -61,9 +106,47 @@ class PlaneController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $plane = Plane::find($id);
-        $plane->update($request->all());
-        return $plane;
+        //Validation
+        $validator = Validator::make($request->all(), [
+            'model',
+            'speed',
+            'capacity',
+            'airport_id',
+        ]);
+
+        if($validator->fails()) {
+            $errors = $validator->messages()->get('*');
+            $response = [
+                'message' => 'Validation failed',
+                'errors' => $errors,
+                'status' => 400
+            ];
+            return response($response, 400);
+        }
+
+        $raw_plane = Plane::find($id);
+
+        if($raw_plane == null) {
+            $response = [
+                'message' => 'Plane not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        $raw_plane->update($request->all());
+
+        $pretty_plane = new PlaneResource(Plane::find($id));
+
+        $response = [
+            'plane' => $pretty_plane,
+            'message' => 'Plane created successfully',
+            'status' => 200
+        ];
+
+        return response($response, 200);
+        
     }
 
     /**
@@ -74,6 +157,25 @@ class PlaneController extends Controller
      */
     public function destroy($id)
     {
-        return Plane::destroy($id);
+        $raw_plane = Plane::find($id);
+
+        //Testing if plane is present in database
+        if($raw_plane == null) {
+            $response = [
+                'message' => 'Plane not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        Plane::destroy($id);
+
+        $response = [
+            'message' => 'Plane found and deleted successfully.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 }

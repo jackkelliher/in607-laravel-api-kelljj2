@@ -61,7 +61,7 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
 
 //No authentication for get requests
 Route::group(['prefix' => 'airports'], function () {
-    Route::get('/', [AirportController::class, 'index']);
+    Route::get('/', [AirportController::class, 'index'])->name('airports_index');
     Route::get('/{id}', [AirportController::class, 'show']);
 });
 

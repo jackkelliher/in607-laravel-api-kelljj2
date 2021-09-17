@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Flight;
 use App\Http\Resources\FlightResource;
-use DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Response;
 
 class FlightController extends Controller
 {
@@ -18,7 +19,7 @@ class FlightController extends Controller
     public function index()
     {
         return FlightResource::collection(Cache::remember('flights', 60 * 60 * 12, function() {
-            return Flight::all();
+            return Flight::paginate(15);
         }));
     }
 
@@ -31,11 +32,39 @@ class FlightController extends Controller
     public function store(Request $request)
     {
         //Validation
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'departure_date' => 'required',
-            'arrival_date' => 'required'
+            'arrival_date' => 'required',
+            'departure_airport' => 'required',
+            'arrival_airport' => 'required',
+            'pilot_id' => 'required',
+            'plane_id' => 'required'
         ]);
-        return Flight::create($request->all());
+
+        if($validator->fails()) {
+            $error = $validator->messages()->get('*');
+            $response = [
+                'message' => 'Validation failed',
+                'errors' => $error,
+                'status' => 400
+            ];
+
+            return response($response, 400);
+        }
+        
+
+        $flight = Flight::create($request->all());
+        $id = $flight->id;
+
+        $pretty_flight = new FlightResource(Flight::find($id));
+
+        $response = [
+            'flight' => $pretty_flight,
+            'message' => 'Flight created successfully.',
+            'status' => 201
+        ];
+        
+        return response($response, 201);
     }
 
     /**
@@ -46,7 +75,27 @@ class FlightController extends Controller
      */
     public function show($id)
     {
-        return Flight::find($id);
+        $raw_flight = Flight::find($id);
+
+        //Testing if flight exsists in database
+        if($raw_flight == null) {
+            $response = [
+                'message' => 'Flight not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        $flight = new FlightResource(Flight::find($id));
+
+        $response = [
+            'flight' => $flight,
+            'message' => 'Flight found.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 
     /**
@@ -58,9 +107,48 @@ class FlightController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $flight = Flight::find($id);
-        $flight->update($request->all());
-        return $flight;
+        //Validation
+        $validator = Validator::make($request->all(), [
+            'departure_date',
+            'arrival_date',
+            'departure_airport',
+            'arrival_airport',
+            'pilot_id',
+            'plane_id'
+        ]);
+
+        if($validator->fails()) {
+            $errors = $validator->messages()->get('*');
+            $response = [
+                'message' => 'Validation failed',
+                'errors' => $errors,
+                'status' => 400
+            ];
+            return response($response, 400);
+        }
+
+        $raw_flight = Flight::find($id);
+
+        if($raw_flight == null) {
+            $response = [
+                'message' => 'Flight not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        $raw_flight->update($request->all());
+
+        $pretty_flight = new FlightResource(Flight::find($id));
+
+        $response = [
+            'flight' => $pretty_flight,
+            'message' => 'Flight created successfully',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 
     /**
@@ -71,6 +159,25 @@ class FlightController extends Controller
      */
     public function destroy($id)
     {
-        return Flight::destroy($id);
+        $raw_flight = Flight::find($id);
+
+        //Testing if flight is present in database
+        if($raw_flight == null) {
+            $response = [
+                'message' => 'Flight not found.',
+                'status' => 404
+            ];
+
+            return response($response, 404);
+        }
+
+        Flight::destroy($id);
+
+        $response = [
+            'message' => 'Flight found and deleted successfully.',
+            'status' => 200
+        ];
+
+        return response($response, 200);
     }
 }

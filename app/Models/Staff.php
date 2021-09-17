@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Staff extends Model
 {
-    protected $fillable=['hire_date', 'job', 'qualifications'];
+    protected $fillable=['hire_date', 'job', 'qualifications', 'customer_id', 'airport_id'];
     
     public function customer() {
         return $this->belongsTo(Customer::Class);
