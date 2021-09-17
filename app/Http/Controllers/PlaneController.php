@@ -34,7 +34,8 @@ class PlaneController extends Controller
         $request->validate([
             'model' => 'required',
             'speed' => 'required',
-            'capacity' => 'required'
+            'capacity' => 'required',
+            'airport_id' => 'required'
         ]);
 
         return Plane::update($request->all());
