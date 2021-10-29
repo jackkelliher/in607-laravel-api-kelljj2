@@ -26,7 +26,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login'); //Route 
 Route::group(['middleware' => ['auth:sanctum']], function() {
     //Using authentication for all routes that post put and delete
 
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/logout', [AuthController::class, 'logout']);
 
     Route::group(['prefix' => 'airports'], function () {
         Route::post('/', [AirportController::class, 'store']);
