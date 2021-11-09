@@ -8,6 +8,8 @@ use App\Models\Plane;
 use App\Http\Resources\PlaneResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Response;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use DB;
 
 class PlaneController extends Controller
@@ -17,11 +19,19 @@ class PlaneController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function paginate($items, $perPage = 5, $page = null, $options = [])
+    {
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = $items instanceof Collection ? $items : Collection::make($items);
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
+    }
+
     public function index()
     {
         return PlaneResource::collection(Cache::remember('planes', 60 * 60 * 24, function() {
-            $collection = Plane::paginate(15);
-            return $collection;
+            $planes = Plane::all();
+            $paginated = $this->paginate($planes);
+            return $paginated;
         }));
     }
 
