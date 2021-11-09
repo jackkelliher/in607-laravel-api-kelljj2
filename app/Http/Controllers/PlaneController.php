@@ -7,9 +7,6 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\Plane;
 use App\Http\Resources\PlaneResource;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Response;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use DB;
 
@@ -20,20 +17,12 @@ class PlaneController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function paginate($items, $perPage = 5, $page = null, $options = [])
-    {
-        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
-        $items = $items instanceof Collection ? $items : Collection::make($items);
-        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
-    }
 
     public function index()
     {
         return PlaneResource::collection(Cache::remember('planes', 60 * 60 * 24, function() {
-            $planes = Plane::all();
-            $planeCollection = collect($planes);
-            $paginated = $this->paginate($planeCollection);
-            return Plane::paginate(15);
+            $planes = Plane::paginate(10);
+            return $planes;
         }));
     }
 
