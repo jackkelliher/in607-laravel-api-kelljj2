@@ -8,6 +8,7 @@ use App\Models\Plane;
 use App\Http\Resources\PlaneResource;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Http\Controllers\Controller;
 use DB;
 
 class PlaneController extends Controller
@@ -21,7 +22,7 @@ class PlaneController extends Controller
     public function index()
     {
         return PlaneResource::collection(Cache::remember('planes', 60 * 60 * 24, function() {
-            $planes = Plane::all()->paginate(10);
+            $planes = Plane::paginate(10);
             return $planes;
         }));
     }
