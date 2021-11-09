@@ -21,7 +21,7 @@ class PlaneController extends Controller
 
     public function index()
     {
-        return Plane::paginate(10);
+        return Plane::paginate(5);
     }
 
     /**
