@@ -19,7 +19,7 @@ class FlightController extends Controller
     public function index()
     {
         return FlightResource::collection(Cache::remember('flights', 60 * 60 * 12, function() {
-            return Flight::paginate(15);
+            return Flight::all();
         }));
     }
 

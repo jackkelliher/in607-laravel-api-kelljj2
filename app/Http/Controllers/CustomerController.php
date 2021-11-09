@@ -19,7 +19,7 @@ class CustomerController extends Controller
     public function index()
     {
         return CustomerResource::collection(Cache::remember('customers', 60 * 60 * 24, function() {
-            return Customer::paginate(15);
+            return Customer::all();
         }));
     }
 
