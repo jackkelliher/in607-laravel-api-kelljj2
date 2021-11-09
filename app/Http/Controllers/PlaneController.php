@@ -33,7 +33,7 @@ class PlaneController extends Controller
             $planes = Plane::all();
             $planeCollection = collect($planes);
             $paginated = $this->paginate($planeCollection);
-            return $planes::Paginate(15);
+            return Plane::paginate(15);
         }));
     }
 
