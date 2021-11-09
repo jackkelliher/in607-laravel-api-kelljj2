@@ -19,9 +19,7 @@ class StaffController extends Controller
      */
     public function index()
     {
-        return StaffResource::collection(Cache::remember('staff', 60 * 60 * 24, function() {
-            return Staff::all();
-        }));
+        return Staff::paginate(5);
     }
 
     /**
