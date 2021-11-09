@@ -31,7 +31,8 @@ class PlaneController extends Controller
     {
         return PlaneResource::collection(Cache::remember('planes', 60 * 60 * 24, function() {
             $planes = Plane::all();
-            $paginated = $this->paginate($planes);
+            $planeCollection = collect($planes);
+            $paginated = $this->paginate($planeCollection);
             return $paginated;
         }));
     }
