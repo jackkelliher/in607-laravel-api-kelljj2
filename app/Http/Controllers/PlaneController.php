@@ -21,7 +21,9 @@ class PlaneController extends Controller
 
     public function index()
     {
-        return Plane::paginate(5);
+        return PlaneResource::collection(Cache::remember('planes', 60 * 60 * 24, function() {
+            return Plane::all();
+        }));
     }
 
     /**

@@ -20,7 +20,9 @@ class AirportController extends Controller
      */
     public function index()
     {
-        return Airport::paginate(5);
+        return AirportResource::collection(Cache::remember('airports', 60 * 60 * 24, function() {
+            return Airport::all();
+        }));
     }
 
     /**
