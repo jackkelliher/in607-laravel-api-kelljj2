@@ -20,9 +20,7 @@ class AirportController extends Controller
      */
     public function index()
     {
-        return AirportResource::collection(Cache::remember('airports', 60 * 60 * 24, function() {
-            return Airport::all();
-        }));
+        return AirportResource::collection;
     }
 
     /**
