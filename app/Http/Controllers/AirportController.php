@@ -20,7 +20,7 @@ class AirportController extends Controller
      */
     public function index()
     {
-        return AirportResource::collection;
+        return AirportResource::collection(Airport::all());
     }
 
     /**
