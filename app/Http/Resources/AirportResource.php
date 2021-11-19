@@ -15,6 +15,7 @@ class AirportResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'id' => $this->id,
             'location' => $this->location,
             'num_planes' => $this->planes_count,
             'num_staff' => $this->staff_count
