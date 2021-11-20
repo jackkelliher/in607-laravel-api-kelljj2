@@ -18,9 +18,7 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        return CustomerResource::collection(Cache::remember('customers', 60 * 60 * 24, function() {
-            return Customer::all();
-        }));
+        return CustomerResource::collection(Customer::all());
     }
 
     /**
