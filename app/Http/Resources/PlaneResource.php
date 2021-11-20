@@ -16,6 +16,7 @@ class PlaneResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'id' => $this->id,
             'model' => $this->model,
             'capacity' => $this->capacity,
             'speed' => $this->speed,
